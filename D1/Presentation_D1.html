@@ -42,29 +42,20 @@
         <h2>1. Appium Installation and Validation</h2>
         <h3>Install Appium (via npm or Appium Desktop) and validate the installation with <code>appium --version</code></h3>
         <p>Appium is an open-source test automation framework for use with native, hybrid, and mobile web apps. It drives iOS, Android, and Windows apps using the WebDriver protocol.</p>
-        <h4>How to Install Node.js on macOS:</h4>
-        <p>There are two primary ways to install Node.js on macOS: using the official installer or using a version manager like Homebrew.</p>
-        <h5>Using the Official Installer:</h5>
+        <h4>How to Install Node.js on macOS (Recommended Method):</h4>
+        <p>The recommended way to install Node.js on macOS is by using Homebrew, a popular package manager. This makes it easy to install, update, and manage different versions.</p>
+        <h5>Using Homebrew:</h5>
         <ol>
-            <li>Go to the official Node.js website: <a href="https://nodejs.org/" target="_blank">https://nodejs.org/</a></li>
-            <li>Download the LTS (Long Term Support) version for macOS.</li>
-            <li>Run the downloaded <code>.pkg</code> file and follow the installation wizard.</li>
-            <li>After installation, open your terminal and verify the installation by running:
-                <pre><code>node -v</code></pre>
-                <pre><code>npm -v</code></pre>
-            </li>
-        </ol>
-        <h5>Using Homebrew (Recommended):</h5>
-        <ol>
-            <li>If you don't have Homebrew, install it by running the following command in your terminal:
+            <li><strong>Install Homebrew (if you don't have it):</strong> Open your terminal and run the following command:
                 <pre><code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</code></pre>
             </li>
-            <li>Once Homebrew is installed, you can install Node.js by running:
+            <li><strong>Install Node.js:</strong> Once Homebrew is installed, run the following command to install Node.js:
                 <pre><code>brew install node</code></pre>
             </li>
-            <li>Verify the installation:
+            <li><strong>Verify Installation:</strong> After the installation is complete, verify that Node.js and npm (Node Package Manager, which comes with Node.js) are installed correctly:
                 <pre><code>node -v</code></pre>
                 <pre><code>npm -v</code></pre>
+                <p>You should see the version numbers for both packages printed in your terminal.</p>
             </li>
         </ol>
         <h4>Installation via npm (Node Package Manager):</h4>
@@ -113,7 +104,8 @@
             <li><strong>Add to System PATH:</strong>
                 <ul>
                     <li><strong>macOS/Linux:</strong> Open your <code>.bash_profile</code>, <code>.zshrc</code>, or equivalent file and add the following line (replace with your actual SDK path):
-                        <pre><code>export PATH=$PATH:/Users/vgm/Library/Android/sdk/platform-tools</code></pre>
+                        <h4>⚠️ Do not run the command below by yourself, wait for the approval. ⚠️</h4>
+                        <pre><code>export PATH=$PATH:/Users/YOUR-USER-HERE/Library/Android/sdk/platform-tools</code></pre>
                         Then, run <code>source ~/.bash_profile</code> (or <code>.zshrc</code>) to apply changes.
                     </li>
                     <li><strong>Windows:</strong>
@@ -181,6 +173,8 @@ ABCDEF012345         device product:myproduct model:MyPhone device:mydevice tran
         <h3>Extract logs from the device and identify the line where an app is opened: <code>adb logcat | grep “ActivityManager”</code></h3>
         <p><code>adb logcat</code> displays device logs in real-time. Filtering with <code>grep "ActivityManager"</code> helps to focus on activity-related events, such as app launches.</p>
         <pre><code>adb logcat | grep "ActivityManager"</code></pre>
+        <p>You can use the same code as before to collect logs only from the Saucelabs App:</p>
+        <pre><code>adb logcat | grep "com.saucelabs.mydemoapp.android"</code></pre>
     </div>
 
     <div class="slide">
@@ -212,9 +206,9 @@ ABCDEF012345         device product:myproduct model:MyPhone device:mydevice tran
     </div>
 
     <div class="slide">
-        <h2>11. ADB Commands with Multiple Devices (<code>-s <serial></code>)</h2>
-        <h3>Repeat the same ADB actions as before on Physical Android: use <code>-s <serial></code> to specify which device you want to use.</h3>
-        <p>When multiple devices are connected, you need to specify which device to target using the <code>-s <serial></code> flag, where <code><serial></code> is the device's serial number (from <code>adb devices</code> output).</p>
+        <h2>11. ADB Commands with Multiple Devices (<code>-s<serial></code>)</h2>
+        <h3>Repeat the same ADB actions as before on Physical Android: use <code>-s<serial></code> to specify which device you want to use.</h3>
+        <p>When multiple devices are connected, you need to specify which device to target using the <code>-s<serial></code> flag, where <code><serial></code> is the device's serial number (from <code>adb devices</code> output).</p>
         <p>Example (assuming <code>ABCDEF012345</code> is your physical device serial):</p>
         <pre><code>adb -s ABCDEF012345 install path/to/your/app.apk</code></pre>
         <pre><code>adb -s ABCDEF012345 shell screencap -p /sdcard/screen.png</code></pre>
@@ -245,9 +239,7 @@ ABCDEF012345         device product:myproduct model:MyPhone device:mydevice tran
         <h4>Toggle Airplane Mode:</h4>
         <p>Enable/disable airplane mode.</p>
         <pre><code>adb shell settings put global airplane_mode_on 1</code></pre>
-        <pre><code>adb shell am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true</code></pre>
         <pre><code>adb shell settings put global airplane_mode_on 0</code></pre>
-        <pre><code>adb shell am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false</code></pre>
 
         <h4>Adjust Screen Brightness:</h4>
         <p>Set screen brightness (0-255).</p>

@@ -85,6 +85,15 @@
             <li>Click on the <code>Continue Shopping</code> button</li>
             <li>Validate that the <code>Products</code> screen has been displayed and that the cart is empty.</li>
         </ul>
+
+        <h3>Understanding Assertions with <code>assert</code></h3>
+        <p>The <code>assert</code> statement is a fundamental part of testing. It checks if a condition is true. If the condition is false, it raises an <code>AssertionError</code>, which automatically fails the test. This is how you verify that your application is behaving as expected.</p>
+        <pre><code># assert <condition>, "Message to display if the assertion fails"
+expected_title = "Products"
+actual_title = driver.find_element(by=AppiumBy.ID, value="product_title").text
+assert actual_title == expected_title, f"Expected title to be '{expected_title}', but found '{actual_title}'"</code></pre>
+        <p>Using a descriptive message after the comma is a best practice. It makes debugging much easier because when a test fails, you'll know exactly why.</p>
+
     </div>
 
     <div class="slide">

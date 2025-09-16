@@ -57,10 +57,6 @@
         <p>Open your terminal or command prompt and simply type:</p>
         <pre><code>appium</code></pre>
         <p>The server will start and typically listen on <code>0.0.0.0:4723</code>. You should see output indicating the server is listening.</p>
-        <h4>Appium Desktop:</h4>
-        <p>Open the Appium Desktop application. Click the "Start Server" button. You can configure the host and port if needed, but the default is <code>0.0.0.0:4723</code>.</p>
-        <h4>Validation:</h4>
-        <p>You can check if the server is running by looking at the terminal output or the Appium Desktop interface. Alternatively, you can try to access <code>http://localhost:4723/wd/hub/status</code> in your web browser; a successful connection indicates the server is active.</p>
     </div>
 
     <div class="slide">
@@ -69,7 +65,9 @@
         <h3>Open Appium Inspector and configure Capabilities to open a connection with the emulator.</h3>
         <p>Appium Inspector is a GUI tool that helps you inspect the UI elements of your mobile application, making it easier to write test scripts by providing element locators.</p>
         <ol>
-            <li><strong>Download:</strong> Download the appropriate version for your OS from the main releases page on GitHub.</li>
+            <li><strong>Download:</strong> Download the appropriate .dmg version for your OS from the main releases page on GitHub.</li>
+                <ul><li>If your MacOs is a <strong>Apple Sylicon</strong>, install the x64 version. <i>E.g: Appium-Inspector-2025.8.2-mac-x64.dmg</i></li></ul>
+                <ul><li>If your MacOs is a <strong>Intel</strong>, install the arm64 version. <i>E.g: Appium-Inspector-2025.8.2-mac-arm64.dmg</i></li></ul>
             <li><strong>Install/Launch:</strong> Install the application and launch it.</li>
             <li><strong>Configure Capabilities:</strong> In Appium Inspector, you'll need to enter "Desired Capabilities". <strong>Capabilities</strong> are a set of key-value pairs that you send to the Appium server to tell it what kind of test session you want to start (e.g., which platform, which device, which app). Here's an example for the SauceLabs demo app:</li>
         </ol>
@@ -80,7 +78,90 @@
   "appium:appPackage": "com.saucelabs.mydemoapp.android",
   "appium:appActivity": "com.saucelabs.mydemoapp.android.view.activities.SplashActivity"
 }</code></pre>
-        <p><strong>Note:</strong> <code>appium:appActivity</code> is often needed to specify the entry point of your application. You can find this using tools like ADB.</p>
+        <p><strong>Note:</strong> To find the <code>appium:appPackage</code> and <code>appium:appActivity</code> for the app currently open on your device, you can use the following ADB command:</p>
+        <pre><code>adb shell dumpsys activity activities | grep mCurrentFocus</code></pre>
+        <p>This will output information about the focused activity, which includes the package name and the activity name.</p>
+        <details>
+            <summary>Common Capabilities (Click to expand)</summary>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Capability</th>
+                        <th>Type</th>
+                        <th>Required?</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>platformName</code></td>
+                        <td>string</td>
+                        <td>yes</td>
+                        <td>The type of platform hosting the app or browser (e.g., 'Android', 'iOS').</td>
+                    </tr>
+                    <tr>
+                        <td><code>appium:automationName</code></td>
+                        <td>string</td>
+                        <td>yes</td>
+                        <td>The name of the Appium driver to use (e.g., 'UiAutomator2' for Android, 'XCUITest' for iOS).</td>
+                    </tr>
+                    <tr>
+                        <td><code>browserName</code></td>
+                        <td>string</td>
+                        <td>no</td>
+                        <td>The name of the browser to launch and automate, if the driver supports web browsers.</td>
+                    </tr>
+                    <tr>
+                        <td><code>appium:app</code></td>
+                        <td>string</td>
+                        <td>no</td>
+                        <td>The path (local or remote URL) to an installable application file (.apk, .aab, .ipa, .zip).</td>
+                    </tr>
+                    <tr>
+                        <td><code>appium:deviceName</code></td>
+                        <td>string</td>
+                        <td>no</td>
+                        <td>The name of a particular device to automate (e.g., 'iPhone 14'). Mainly for iOS simulators.</td>
+                    </tr>
+                    <tr>
+                        <td><code>appium:platformVersion</code></td>
+                        <td>string</td>
+                        <td>no</td>
+                        <td>The version of the platform (e.g., '16.0' for iOS, '12' for Android).</td>
+                    </tr>
+                    <tr>
+                        <td><code>appium:newCommandTimeout</code></td>
+                        <td>number</td>
+                        <td>no</td>
+                        <td>The number of seconds the server waits for a new command before shutting down the session (default 60s).</td>
+                    </tr>
+                    <tr>
+                        <td><code>appium:noReset</code></td>
+                        <td>boolean</td>
+                        <td>no</td>
+                        <td>If true, prevents the app from being reset at the start of a session (default false).</td>
+                    </tr>
+                    <tr>
+                        <td><code>appium:fullReset</code></td>
+                        <td>boolean</td>
+                        <td>no</td>
+                        <td>If true, uninstalls and reinstalls the app before a session (default false).</td>
+                    </tr>
+                    <tr>
+                        <td><code>appium:eventTimings</code></td>
+                        <td>boolean</td>
+                        <td>no</td>
+                        <td>If true, collects event timings for performance analysis (default false).</td>
+                    </tr>
+                    <tr>
+                        <td><code>appium:printPageSourceOnFindFailure</code></td>
+                        <td>boolean</td>
+                        <td>no</td>
+                        <td>If true, logs the page source when an element lookup fails, aiding in debugging (default false).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </details>
         <ol start="4">
             <li><strong>Start Session:</strong> Click "Start Session" to connect to your emulator and load the app's UI.</li>
             <li><strong>Inspect Elements and Interact:</strong>
@@ -135,94 +216,8 @@ time.sleep(4)</code></pre>
     </div>
 
 
-    <div class="slide">
-        <h2>5. Understanding Appium Capabilities</h2>
-        <h3>What are Capabilities?</h3>
-        <p>Capabilities are a set of key-value pairs sent to the Appium server to tell it what kind of automation session you want to start. They are essential for defining the test environment.</p>
-        <h3>Common Capabilities:</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Capability</th>
-                    <th>Type</th>
-                    <th>Required?</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><code>platformName</code></td>
-                    <td>string</td>
-                    <td>yes</td>
-                    <td>The type of platform hosting the app or browser (e.g., 'Android', 'iOS').</td>
-                </tr>
-                <tr>
-                    <td><code>appium:automationName</code></td>
-                    <td>string</td>
-                    <td>yes</td>
-                    <td>The name of the Appium driver to use (e.g., 'UiAutomator2' for Android, 'XCUITest' for iOS).</td>
-                </tr>
-                <tr>
-                    <td><code>browserName</code></td>
-                    <td>string</td>
-                    <td>no</td>
-                    <td>The name of the browser to launch and automate, if the driver supports web browsers.</td>
-                </tr>
-                <tr>
-                    <td><code>appium:app</code></td>
-                    <td>string</td>
-                    <td>no</td>
-                    <td>The path (local or remote URL) to an installable application file (.apk, .aab, .ipa, .zip).</td>
-                </tr>
-                <tr>
-                    <td><code>appium:deviceName</code></td>
-                    <td>string</td>
-                    <td>no</td>
-                    <td>The name of a particular device to automate (e.g., 'iPhone 14'). Mainly for iOS simulators.</td>
-                </tr>
-                <tr>
-                    <td><code>appium:platformVersion</code></td>
-                    <td>string</td>
-                    <td>no</td>
-                    <td>The version of the platform (e.g., '16.0' for iOS, '12' for Android).</td>
-                </tr>
-                <tr>
-                    <td><code>appium:newCommandTimeout</code></td>
-                    <td>number</td>
-                    <td>no</td>
-                    <td>The number of seconds the server waits for a new command before shutting down the session (default 60s).</td>
-                </tr>
-                <tr>
-                    <td><code>appium:noReset</code></td>
-                    <td>boolean</td>
-                    <td>no</td>
-                    <td>If true, prevents the app from being reset at the start of a session (default false).</td>
-                </tr>
-                <tr>
-                    <td><code>appium:fullReset</code></td>
-                    <td>boolean</td>
-                    <td>no</td>
-                    <td>If true, uninstalls and reinstalls the app before a session (default false).</td>
-                </tr>
-                <tr>
-                    <td><code>appium:eventTimings</code></td>
-                    <td>boolean</td>
-                    <td>no</td>
-                    <td>If true, collects event timings for performance analysis (default false).</td>
-                </tr>
-                <tr>
-                    <td><code>appium:printPageSourceOnFindFailure</code></td>
-                    <td>boolean</td>
-                    <td>no</td>
-                    <td>If true, logs the page source when an element lookup fails, aiding in debugging (default false).</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-
       <div class="slide">
-        <h2>6. Common Appium Actions with UiAutomator2</h2>
+        <h2>5. Common Appium Actions with UiAutomator2</h2>
         <h3>Once you find an element, you need to interact with it. Here are the most common methods.</h3>
         <p>After locating an element using one of the strategies discussed, you'll use these methods to perform actions on it.</p>
         <ul>
@@ -274,8 +269,9 @@ print(f"Found {len(products)} products.")</code></pre>
     </div>
 
     <div class="slide">
-        <h2>7. SauceLabs App Test Script (Full Flow)</h2>
+        <h2>6. SauceLabs App Test Script (Full Flow)</h2>
         <h3>Using the commands from the last section and SauceLabs APP, you will need to create a test script that:</h3>
+        <h4>Do not use the Record function on this section, code directly using your IDE and the functions above.</h4>
         <ul>
             <li>Starts the application.</li>
             <li>Selects the first item from the product list.</li>
@@ -286,7 +282,7 @@ print(f"Found {len(products)} products.")</code></pre>
             <li>In the cart, decreases the quantity to 1.</li>
             <li>Proceeds to checkout.</li>
             <li>On the Login screen, enters "UserTest" and "PasswordTest" and logs in.</li>
-            <li>On the Data screen, fills in all values and proceeds.</li>
+            <li>On the Checkout screen, fills in all values and proceeds.</li>
             <li>On the Payment screen, fills in all data and proceeds.</li>
             <li>On the Checkout screen, just proceeds.</li>
             <li>Enters the "Checkout Complete" screen.</li>
