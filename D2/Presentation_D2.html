@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Test Automation with Python, UiAutomator2 and Pytest - Day 2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #0056b3;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: "Courier New", Courier, monospace;
+            color: #d44950;
+        }
+        .slide {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mobile Test Automation - Day 2</h1>
+    <h3>Appium Server/Inspector + Connection to Devices + Element Inspection + Locators</h3>
+    <div class="slide">
+        <h2>1. Appium Server Startup and Validation</h2>
+        <h3>Start the Appium server (via command line or Appium Desktop) and verify it's running on the default port (4723).</h3>
+        <p>The Appium server is the core component that listens for commands from your test scripts and executes them on the mobile device.</p>
+        <h4>Command Line:</h4>
+        <p>Open your terminal or command prompt and simply type:</p>
+        <pre><code>appium</code></pre>
+        <p>The server will start and typically listen on <code>0.0.0.0:4723</code>. You should see output indicating the server is listening.</p>
+        <h4>Appium Desktop:</h4>
+        <p>Open the Appium Desktop application. Click the "Start Server" button. You can configure the host and port if needed, but the default is <code>0.0.0.0:4723</code>.</p>
+        <h4>Validation:</h4>
+        <p>You can check if the server is running by looking at the terminal output or the Appium Desktop interface. Alternatively, you can try to access <code>http://localhost:4723/wd/hub/status</code> in your web browser; a successful connection indicates the server is active.</p>
+    </div>
+
+    <div class="slide">
+        <h2>2. Appium Inspector Setup and Usage</h2>
+        <h3>Download and configure Appium Inspector: <a href="https://github.com/appium/appium-inspector/releases" target="_blank">Latest Release</a></h3>
+        <h3>Open Appium Inspector and configure Capabilities to open a connection with the emulator.</h3>
+        <p>Appium Inspector is a GUI tool that helps you inspect the UI elements of your mobile application, making it easier to write test scripts by providing element locators.</p>
+        <ol>
+            <li><strong>Download:</strong> Download the appropriate version for your OS from the main releases page on GitHub.</li>
+            <li><strong>Install/Launch:</strong> Install the application and launch it.</li>
+            <li><strong>Configure Capabilities:</strong> In Appium Inspector, you'll need to enter "Desired Capabilities". <strong>Capabilities</strong> are a set of key-value pairs that you send to the Appium server to tell it what kind of test session you want to start (e.g., which platform, which device, which app). Here's an example for the SauceLabs demo app:</li>
+        </ol>
+        <pre><code>{
+  "platformName": "Android",
+  "appium:deviceName": "emulator-5554",
+  "appium:automationName": "UiAutomator2",
+  "appium:appPackage": "com.saucelabs.mydemoapp.android",
+  "appium:appActivity": "com.saucelabs.mydemoapp.android.view.activities.SplashActivity"
+}</code></pre>
+        <p><strong>Note:</strong> <code>appium:appActivity</code> is often needed to specify the entry point of your application. You can find this using tools like ADB.</p>
+        <ol start="4">
+            <li><strong>Start Session:</strong> Click "Start Session" to connect to your emulator and load the app's UI.</li>
+            <li><strong>Inspect Elements and Interact:</strong>
+                <p>Once connected, you'll see a screenshot of your device's current screen. You can click on elements to view their properties (IDs, XPaths, etc.) and perform actions like "Tap" directly from the Inspector to test interactions.</p>
+            </li>
+            <li><strong>Using the Recorder:</strong>
+                <p>Appium Inspector has a "Recorder" feature that can generate code as you perform actions. To use it, click the "Start Recording" button.</p>
+                <p><strong>⚠️ Important Warning:</strong> The recorder is a great tool for learning and for getting started quickly. However, the code it generates is often not robust. It may use fragile locators or lack proper waits. <strong>Always review and refactor the recorded code.</strong> Use it as a starting point, not a final solution.</p>
+            </li>
+        </ol>
+    </div>
+    <div class="slide">
+        <h2>3. Understanding Element Locators</h2>
+        <h3>Choosing the right locator is key to stable and reliable tests.</h3>
+        <p>A locator is a way to identify a specific UI element on the screen. Appium supports various locator strategies. The one you choose can significantly impact your test's speed and reliability.</p>
+        <h4>Locator Strategy Hierarchy (Best to Worst):</h4>
+        <ol>
+            <li><strong>Accessibility ID:</strong> This is the preferred locator. It targets the <code>content-desc</code> on Android. It's great for test stability and also improves your app's accessibility. It is designed to be human-readable.</li>
+            <li><strong>ID:</strong> This targets the <code>resource-id</code> on Android. It's usually unique and very fast, making it an excellent choice when available.</li>
+            <li><strong>Class Name:</strong> Targets elements by their native class (e.g., <code>android.widget.Button</code>). Can be useful but often returns multiple elements, requiring you to select a specific one from a list.</li>
+            <li><strong>XPath:</strong> This is the most flexible but also the slowest and most brittle locator. An XPath is a path through the UI's XML structure and can easily break with small UI changes. <strong>Use it as a last resort</strong> when no other unique locator is available.</li>
+        </ol>
+        <p>When you inspect an element in Appium Inspector, you will see these different locator options. Always try to use them in the order listed above to create the most robust tests.</p>
+    </div>
+
+    <div class="slide">
+        <h2>4. Simple Python Test Script to Open an App</h2>
+        <h3>Develop a simple Python test script to open the application on the device.</h3>
+        <p>Before writing the script, remember to install the Appium Python client package:</p>
+        <pre><code>pip3 install Appium-Python-Client</code></pre>
+        <p>Here's a basic Python script to open the SauceLabs demo app:</p>
+        <pre><code class="language-python">import time
+from appium import webdriver
+from appium.options.common.base import AppiumOptions
+
+options = AppiumOptions()
+options.load_capabilities({
+	"platformName": "Android",
+	"appium:deviceName": "emulator-5554",
+	"appium:automationName": "UiAutomator2",
+	"appium:appPackage": "com.saucelabs.mydemoapp.android",
+	"appium:ensureWebviewsHavePages": True,
+	"appium:nativeWebScreenshot": True,
+	"appium:newCommandTimeout": 3600,
+	"appium:connectHardwareKeyboard": True
+})
+
+driver = webdriver.Remote("http://127.0.0.1:4723", options=options)
+time.sleep(4)</code></pre>
+        <p>To run this script, save it as a <code>.py</code> file (e.g., <code>test_open_app.py</code>) and execute from your terminal:</p>
+        <pre><code>python3 test_open_app.py</code></pre>
+    </div>
+
+
+    <div class="slide">
+        <h2>5. Understanding Appium Capabilities</h2>
+        <h3>What are Capabilities?</h3>
+        <p>Capabilities are a set of key-value pairs sent to the Appium server to tell it what kind of automation session you want to start. They are essential for defining the test environment.</p>
+        <h3>Common Capabilities:</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Capability</th>
+                    <th>Type</th>
+                    <th>Required?</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>platformName</code></td>
+                    <td>string</td>
+                    <td>yes</td>
+                    <td>The type of platform hosting the app or browser (e.g., 'Android', 'iOS').</td>
+                </tr>
+                <tr>
+                    <td><code>appium:automationName</code></td>
+                    <td>string</td>
+                    <td>yes</td>
+                    <td>The name of the Appium driver to use (e.g., 'UiAutomator2' for Android, 'XCUITest' for iOS).</td>
+                </tr>
+                <tr>
+                    <td><code>browserName</code></td>
+                    <td>string</td>
+                    <td>no</td>
+                    <td>The name of the browser to launch and automate, if the driver supports web browsers.</td>
+                </tr>
+                <tr>
+                    <td><code>appium:app</code></td>
+                    <td>string</td>
+                    <td>no</td>
+                    <td>The path (local or remote URL) to an installable application file (.apk, .aab, .ipa, .zip).</td>
+                </tr>
+                <tr>
+                    <td><code>appium:deviceName</code></td>
+                    <td>string</td>
+                    <td>no</td>
+                    <td>The name of a particular device to automate (e.g., 'iPhone 14'). Mainly for iOS simulators.</td>
+                </tr>
+                <tr>
+                    <td><code>appium:platformVersion</code></td>
+                    <td>string</td>
+                    <td>no</td>
+                    <td>The version of the platform (e.g., '16.0' for iOS, '12' for Android).</td>
+                </tr>
+                <tr>
+                    <td><code>appium:newCommandTimeout</code></td>
+                    <td>number</td>
+                    <td>no</td>
+                    <td>The number of seconds the server waits for a new command before shutting down the session (default 60s).</td>
+                </tr>
+                <tr>
+                    <td><code>appium:noReset</code></td>
+                    <td>boolean</td>
+                    <td>no</td>
+                    <td>If true, prevents the app from being reset at the start of a session (default false).</td>
+                </tr>
+                <tr>
+                    <td><code>appium:fullReset</code></td>
+                    <td>boolean</td>
+                    <td>no</td>
+                    <td>If true, uninstalls and reinstalls the app before a session (default false).</td>
+                </tr>
+                <tr>
+                    <td><code>appium:eventTimings</code></td>
+                    <td>boolean</td>
+                    <td>no</td>
+                    <td>If true, collects event timings for performance analysis (default false).</td>
+                </tr>
+                <tr>
+                    <td><code>appium:printPageSourceOnFindFailure</code></td>
+                    <td>boolean</td>
+                    <td>no</td>
+                    <td>If true, logs the page source when an element lookup fails, aiding in debugging (default false).</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+      <div class="slide">
+        <h2>6. Common Appium Actions with UiAutomator2</h2>
+        <h3>Once you find an element, you need to interact with it. Here are the most common methods.</h3>
+        <p>After locating an element using one of the strategies discussed, you'll use these methods to perform actions on it.</p>
+        <ul>
+            <li>
+                <strong><code>click()</code></strong>
+                <p>Simulates a tap on the selected element.</p>
+                <pre><code>element.click()</code></pre>
+            </li>
+            <li>
+                <strong><code>send_keys(value)</code></strong>
+                <p>Types text into an input field.</p>
+                <pre><code>element.send_keys("my_username")</code></pre>
+            </li>
+            <li>
+                <strong><code>clear()</code></strong>
+                <p>Clears existing text from an editable element.</p>
+                <pre><code>element.clear()</code></pre>
+            </li>
+            <li>
+                <strong><code>.text</code> (Attribute)</strong>
+                <p>Gets the visible text of an element. Essential for assertions.</p>
+                <pre><code>product_name = element.text
+assert product_name == "Sauce Labs Backpack"</code></pre>
+            </li>
+            <li>
+                <strong><code>is_displayed()</code></strong>
+                <p>Returns <code>True</code> if the element is visible on the screen, <code>False</code> otherwise. Useful for assertions.</p>
+                <pre><code>assert element.is_displayed()</code></pre>
+            </li>
+            <li>
+                <strong><code>is_enabled()</code></strong>
+                <p>Returns <code>True</code> if the element is enabled (e.g., a button that can be clicked), <code>False</code> otherwise.</p>
+                <pre><code>assert element.is_enabled()</code></pre>
+            </li>
+            <li>
+                <strong><code>get_attribute(name)</code></strong>
+                <p>Gets the value of a specific attribute of an element (e.g., 'content-desc', 'resource-id', 'checked').</p>
+                <pre><code># Check if a checkbox is checked
+is_checked = element.get_attribute("checked")
+assert is_checked == "true"</code></pre>
+            </li>
+            <li>
+                <strong><code>find_elements(by, value)</code></strong>
+                <p>Finds all elements matching a locator and returns them as a list. This is useful when you expect multiple items, like products in a list.</p>
+                <pre><code>products = driver.find_elements(by=AppiumBy.CLASS_NAME, value="android.widget.TextView")
+print(f"Found {len(products)} products.")</code></pre>
+            </li>
+        </ul>
+    </div>
+
+    <div class="slide">
+        <h2>7. SauceLabs App Test Script (Full Flow)</h2>
+        <h3>Using the commands from the last section and SauceLabs APP, you will need to create a test script that:</h3>
+        <ul>
+            <li>Starts the application.</li>
+            <li>Selects the first item from the product list.</li>
+            <li>Changes the color to Green.</li>
+            <li>Increases the quantity to 2.</li>
+            <li>Adds to cart.</li>
+            <li>Opens the cart.</li>
+            <li>In the cart, decreases the quantity to 1.</li>
+            <li>Proceeds to checkout.</li>
+            <li>On the Login screen, enters "UserTest" and "PasswordTest" and logs in.</li>
+            <li>On the Data screen, fills in all values and proceeds.</li>
+            <li>On the Payment screen, fills in all data and proceeds.</li>
+            <li>On the Checkout screen, just proceeds.</li>
+            <li>Enters the "Checkout Complete" screen.</li>
+        </ul>
+        <h4>⚠️ ONLY AFTER FINISH THE ACTIVITY ABOVE: Use the Recording feature on Appium to evaluate the code.</h4>
+    </div>
+
+    <div class="slide">
+        <h2>Conclusion</h2>
+        <p>This second part of the presentation delved into setting up the Appium server, using Appium Inspector for element identification, and developing Python test scripts for mobile application automation. These are crucial steps for building robust and reliable mobile test automation frameworks.</p>
+        <p>Keep exploring and happy automating!</p>
+    </div>
+
+</body>
+</html>

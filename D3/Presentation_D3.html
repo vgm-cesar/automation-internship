@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Test Automation with Python, UiAutomator2 and Pytest - Day 3</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #0056b3;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: "Courier New", Courier, monospace;
+            color: #d44950;
+        }
+        .slide {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mobile Test Automation - Day 3</h1>
+    <h3>Basic Interactions (Tap, Swipe, Scroll) + Mini Challenge 1</h3>
+    <div class="slide">
+        <h2>1. Mini Challenge</h2>
+        <h3>Using the SauceLabs APP, you will have to develop the test script below (remember to use Assert for validations):</h3>
+        <h4>For this challenge, don't worry for now about implementing any design patterns such as Page Object, dynamic waits, pytest fixtures or complex logs. Just focus on being able to automate the entire flow so that it runs successfully at the end.</h4>
+        <ul>
+            <li>Start the application and ensure that the home screen has loaded.</li>
+            <li>Select the product <code>Sauce Labs Backpack (orange)</code> from the list of products</li>
+            <li>Validate that the product page opened corresponds to the correct product</li>
+            <li>Decrease the quantity of products by pressing <code>'-'</code> and validate that the quantity has decreased by 1 unit</li>
+            <li>Also validate that when you reach zero quantity of products the <code>Add to cart</code> button will become inactive.</li>
+            <li>Increase the quantity of products by pressing <code>'+'</code> and check that the quantity has increased by 1 unit</li>
+            <li>Also check that when you reach more than zero units the <code>Add to cart</code> button will become active</li>
+            <li>Add another unit by pressing <code>+</code>, make sure you have 2 units and click on the <code>Add to cart</code> button.</li>
+            <li>Validate that a circle has appeared in the cart icon informing you of the exact number of items you have added to the cart</li>
+            <li>Open the cart page by clicking on the cart icon</li>
+            <li>Validate that the <code>My Cart</code> screen has been opened</li>
+            <li>Validate that your product is correct</li>
+            <li>Validate that the unit value is as expected</li>
+            <li>Validate that the quantity is correct in the field below the product photo</li>
+            <li>Validate that the quantity is correct in the <code>Total: x Items</code> field</li>
+            <li>Validate that the total value of the purchase is as expected for 2 units of the product</li>
+            <li>Click on the <code>Proceed To Checkout</code> button</li>
+            <li>Validate that the <code>Login</code> screen has been displayed</li>
+            <li>Try to log in without entering <code>Username</code> and <code>Password</code> and validate the error in the <code>Username</code> field</li>
+            <li>Try to log in without entering <code>Password</code> and validate the error in the <code>Password</code> field</li>
+            <li>Capture the first Username from the Usernames list at the bottom of the screen and enter this value in the <code>Username</code> field</li>
+            <li>Capture the Password from the Password list at the bottom of the screen and enter this value in the <code>Password</code> field</li>
+            <li>Click on the <code>Login</code> button</li>
+            <li>Validate that the <code>Checkout, Shipment Address</code> screen has been displayed</li>
+            <li>Enter information in all the form fields and proceed to payment.</li>
+            <li><b>PLUS:</b> Validate all the required fields and their errors when trying to submit the payment without entering these fields</li>
+            <li>Validate that the <code>Checkout, Payment</code> screen has been displayed</li>
+            <li>Enter the values in the corresponding fields and keep the check-box selected</li>
+            <li><b>PLUS:</b> Validate all mandatory fields.</li>
+            <li><b>PLUS:</b> Validate all required fields and their errors when trying to submit the payment without entering these fields.</li>
+            <li>Validate that the <code>Checkout, Payment</code> screen has been displayed</li>
+            <li>Enter the values in the corresponding fields and keep the check-box selected</li>
+            <li><b>PLUS:</b> Validate all required fields and their errors when trying to submit the payment without entering these fields.</li>
+            <li><b>PLUS:</b> Checkbox</li>
+            <li>Proceed to the review by clicking on the <code>Review Order</code> button</li>
+            <li>Validate that the <code>Checkout, Review your order</code> screen has been displayed.</li>
+            <li>Validate that the <code>Deliver Address</code> and <code>Payment Method</code> information is correct</li>
+            <li>Validate the product's unit information such as Name and Value</li>
+            <li>Validate that the total value of the items plus the Freight value is correct.</li>
+            <li>Click on the <code>Place Order</code> button</li>
+            <li>Validate that the Checkout Complete screen has been displayed</li>
+            <li>Click on the <code>Continue Shopping</code> button</li>
+            <li>Validate that the <code>Products</code> screen has been displayed and that the cart is empty.</li>
+        </ul>
+    </div>
+
+    <div class="slide">
+        <h2>Conclusion</h2>
+        <p>This third part of the presentation delved into the longer screen flow for developing automation scripts with Python. During the next meetings we'll learn how to organize and structure our automations more and more.</p>
+        <p>Keep exploring and happy automating!</p>
+    </div>
+
+</body>
+</html>

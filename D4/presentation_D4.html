@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Test Automation - Day 4</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #0056b3;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: "Courier New", Courier, monospace;
+            color: #d44950;
+        }
+        .slide {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mobile Test Automation - Day 4</h1>
+    <h3>Understanding and implementing robust test automation patterns.</h3>
+
+    <div class="slide">
+        <h2>1. Introduction to Page Object Model (POM)</h2>
+        <h3>What is Page Object Model?</h3>
+        <p>The Page Object Model (POM) is a design pattern used in test automation to create an object repository for UI elements. Each web page or screen in the application is represented as a class, and the elements on that page are defined as variables within the class. Interaction methods (e.g., click, type, get text) are also encapsulated within these page classes.</p>
+        <h3>Benefits of POM:</h3>
+        <ul>
+            <li><strong>Maintainability:</strong> If the UI changes, only the page object needs to be updated, not every test script that uses that element.</li>
+            <li><strong>Reusability:</strong> Page objects and their methods can be reused across multiple test cases.</li>
+            <li><strong>Readability:</strong> Test scripts become cleaner, more readable, and easier to understand as they interact with meaningful methods (e.g., <code>login_page.enter_username("test")</code>) rather than direct element locators.</li>
+            <li><strong>Reduced Duplication:</strong> Avoids duplicating element locators and interaction logic across tests.</li>
+        </ul>
+    </div>
+
+    <div class="slide">
+        <h2>2. POM Implementation Example (from D3.py refactoring)</h2>
+        <h3>Structure:</h3>
+        <p>We refactored the original <code>D3.py</code> script into a structured Page Object Model within the <code>D4</code> directory.</p>
+        <ul>
+            <li><code>base_page.py</code>: Contains common methods and utilities that can be inherited by all page objects (e.g., <code>find_element</code>, <code>click_element</code>, <code>send_keys_to_element</code>).</li>
+            <li>Individual Page Classes: Each distinct screen or logical section of the application (e.g., <code>home_page.py</code>, <code>product_page.py</code>, <code>cart_page.py</code>, <code>login_page.py</code>, <code>checkout_page.py</code>, <code>payment_page.py</code>, <code>review_order_page.py</code>, <code>checkout_complete_page.py</code>) has its own Python class.</li>
+        </ul>
+        <h3>Example: <code>base_page.py</code></h3>
+        <pre><code class="language-python">
+from appium.webdriver.common.appiumby import AppiumBy
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+class BasePage:
+    def __init__(self, driver):
+        self.driver = driver
+        self.wait = WebDriverWait(driver, 10)
+
+    def find_element(self, by, locator):
+        return self.wait.until(EC.presence_of_element_located((by, locator)))
+
+    def click_element(self, by, locator):
+        self.find_element(by, locator).click()
+
+    def send_keys_to_element(self, by, locator, text):
+        self.find_element(by, locator).send_keys(text)
+
+    def get_element_text(self, by, locator):
+        return self.find_element(by, locator).text
+
+    def is_element_displayed(self, by, locator):
+        try:
+            return self.find_element(by, locator).is_displayed()
+        except:
+            return False
+        </code></pre>
+        <h3>Example: <code>home_page.py</code></h3>
+        <pre><code class="language-python">
+from appium.webdriver.common.appiumby import AppiumBy
+from base_page import BasePage
+
+class HomePage(BasePage):
+    def __init__(self, driver):
+        super().__init__(driver)
+        self.product_title_id = "productTV"
+        self.orange_backpack_xpath = "//android.widget.TextView[@content-desc='Product Title' and @text='Sauce Labs Backpack (orange)']/../android.widget.ImageView"
+
+    def get_home_page_title(self):
+        return self.get_element_text(AppiumBy.ID, self.product_title_id)
+
+    def select_orange_backpack(self):
+        self.click_element(AppiumBy.XPATH, self.orange_backpack_xpath)
+        </code></pre>
+    </div>
+
+    <div class="slide">
+        <h2>3. Introduction to Pytest Fixtures</h2>
+        <h3>What are Pytest Fixtures?</h3>
+        <p>Pytest fixtures are functions that Pytest runs before (and sometimes after) test functions. They are used to set up a baseline for tests to run against, ensuring that each test has a consistent and isolated environment. Fixtures promote reusability and help manage resources like database connections, temporary files, or, in our case, Appium driver instances.</p>
+        <h3>Benefits of Pytest Fixtures:</h3>
+        <ul>
+            <li><strong>Setup/Teardown Logic:</strong> Centralize setup and teardown code, making tests cleaner and more focused on the actual test logic.</li>
+            <li><strong>Reusability:</strong> Fixtures can be reused across multiple test files and projects.</li>
+            <li><strong>Dependency Injection:</strong> Tests declare the fixtures they need as arguments, and Pytest automatically provides them.</li>
+            <li><strong>Scope Management:</strong> Fixtures can have different scopes (function, class, module, session), allowing for efficient resource management.</li>
+        </ul>
+    </div>
+
+    <div class="slide">
+        <h2>4. Pytest Fixture Implementation (<code>conftest.py</code>)</h2>
+        <h3>The Power of <code>conftest.py</code></h3>
+        <p>The <code>conftest.py</code> file is a special, powerful Pytest file. Any fixtures defined here are automatically available to all tests in the same directory and its subdirectories, without needing any imports. This is Pytest's "magic" for sharing setup logic.</p>
+        
+        <h3>Dissecting the <code>driver</code> Fixture:</h3>
+        <pre><code class="language-python">
+import pytest
+from appium import webdriver
+from appium.options.common.base import AppiumOptions
+
+@pytest.fixture(scope="function")
+def driver():
+    # --- SETUP PHASE ---
+    options = AppiumOptions()
+    options.load_capabilities({ ... }) # Capabilities defined here
+    _driver = webdriver.Remote("http://127.0.0.1:4723", options=options)
+    
+    # The 'yield' keyword passes control to the test function
+    yield _driver
+    
+    # --- TEARDOWN PHASE ---
+    # This code runs AFTER the test function completes (or fails)
+    print("\nQuitting driver...")
+    _driver.quit()
+        </code></pre>
+        
+        <h4>Understanding the Flow:</h4>
+        <ol>
+            <li><strong><code>@pytest.fixture</code></strong>: This decorator tells Pytest that <code>driver()</code> is a fixture, a function that provides a resource to tests.</li>
+            <li><strong>Setup (before <code>yield</code>)</strong>: All code before the <code>yield</code> statement is the <strong>setup</strong> phase. Here, we configure capabilities and initialize the Appium driver.</li>
+            <li><strong><code>yield _driver</code></strong>: This is the core of the fixture. It pauses the fixture's execution, passes the <code>_driver</code> object to the test function, and waits for the test to finish. It's more powerful than <code>return</code> because it allows code to be executed after the test.</li>
+            <li><strong>Teardown (after <code>yield</code>)</strong>: The code after <code>yield</code> is the <strong>teardown</strong> phase. Pytest guarantees this code will run after the test is done, even if the test fails. This is crucial for cleanup, like closing the driver, to prevent resource leaks.</li>
+        </ol>
+
+        <h4>Choosing the Right <code>scope</code>:</h4>
+        <p>The <code>scope</code> parameter controls how often a fixture is created and destroyed. Choosing the right scope is key for test efficiency and reliability.</p>
+        <ul>
+            <li><strong><code>scope="function"</code> (Default & Recommended)</strong>: A new driver is created for every single test function.
+                <ul><li><strong>Pro:</strong> Maximum test isolation. Each test starts with a fresh, clean app state.</li><li><strong>Con:</strong> Slowest option, as app startup is expensive.</li></ul>
+            </li>
+            <li><strong><code>scope="class"</code></strong>: A single driver is created for all test methods within a test class.
+                <ul><li><strong>Pro:</strong> Faster than "function" scope if a class has many tests.</li><li><strong>Con:</strong> Tests within the class can influence each other's state. Requires careful test design.</li></ul>
+            </li>
+            <li><strong><code>scope="session"</code></strong>: A single driver is created for the entire test run (all test files).
+                <ul><li><strong>Pro:</strong> Fastest execution time.</li><li><strong>Con:</strong> Very high risk of tests interfering with each other. Only suitable for a suite of purely read-only tests.</li></ul>
+            </li>
+        </ul>
+        <p><strong>Senior Analyst Advice:</strong> Always start with <code>scope="function"</code>. It is the safest and most reliable. Only consider changing the scope to <code>class</code> or <code>session</code> if you have a large test suite and performance becomes a significant problem, and you are confident your tests are independent.</p>
+    </div>
+
+    <div class="slide">
+        <h2>5. Refactor D3.py to use Page Object and Pytest</h2>
+        <h3>Example Test Structure:</h3>
+        <p>Here's how you would use the implemented Page Objects and the <code>driver</code> fixture in a Pytest test file:</p>
+        <pre><code class="language-python">
+import pytest
+from home_page import HomePage
+from product_page import ProductPage
+# Import other page objects as needed
+
+def test_product_selection(driver):
+    # Initialize page objects with the driver provided by the fixture
+    home_page = HomePage(driver)
+    product_page = ProductPage(driver)
+
+    # Perform actions using page object methods
+    assert home_page.get_home_page_title() == "Products"
+    home_page.select_orange_backpack()
+
+    # Continue with product page interactions
+    assert product_page.get_product_page_title() == "Sauce Labs Backpack (orange)"
+    product_page.increase_quantity()
+    product_page.add_to_cart()
+    product_page.click_cart_icon()
+
+    # ... continue with other page interactions
+        </code></pre>
+        <p>In this example:</p>
+        <ul>
+            <li><code>test_product_selection(driver)</code>: Pytest automatically injects the <code>driver</code> instance from our fixture.</li>
+            <li><code>home_page = HomePage(driver)</code>: We create instances of our page objects, passing the driver to them.</li>
+            <li><code>home_page.select_orange_backpack()</code>: Test steps are now high-level and readable, abstracting away the low-level UI interactions.</li>
+        </ul>
+        <p>Pytest recognizes functions or methods as tests if:</p>
+        <ul>
+            <li>The function/method name starts with <code>test_</code>.</li>
+            <li>Or, for classes, the class name starts with <code>Test</code> (no need to inherit anything).</li>
+        <ul><br>
+            <li>Example of a test function:</li>
+                <code>def test_sum():<br>
+            &nbsp;assert 2 + 2 == 4</code>
+        </ul><br>
+        <ul><li>Example of a test class:</li>
+                <code>class TestMath:<br>
+                    &nbsp;def test_subtraction(self):<br>
+                    &nbsp;&nbsp;assert 5 - 3 == 2</code>
+            </ul>
+        </ul>
+    </div>
+
+    <div class="slide">
+        <h2>Conclusion</h2>
+        <p>By adopting the Page Object Model and leveraging Pytest fixtures, we can build a more robust, maintainable, and scalable mobile test automation framework. These patterns promote clean code, reduce redundancy, and make it easier to manage changes in the application's UI.</p>
+        <p>Happy Testing!</p>
+    </div>
+
+</body>
+</html>
