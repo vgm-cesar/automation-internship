@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 5 - Advanced Automation Topics</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1, h2, h3, h4 {
+            color: #0056b3;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        code {
+            font-family: "Courier New", Courier, monospace;
+            color: #d44950;
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .slide {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        blockquote {
+            border-left: 4px solid #ccc;
+            padding-left: 10px;
+            margin-left: 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mobile Test Automation - Day 5</h1>
+    <h3>Refactoring, Advanced Waits, and Popups</h3>
+
+     <!-- <p>As our test suite grows, it's essential to keep our code clean and well-organized. Refactoring is the process of restructuring existing computer code—changing the factoring—without changing its external behavior. Let's look at some ways we can refactor our project from Day 4.</p> -->
+
+    <div class="slide">
+        <h2>1. Improving Locators Strategy</h2>
+        <p>In our current page objects, we are defining locators inside the <code>__init__</code> method. While this works, a better practice for readability and maintenance is to group them. One way is to use a nested class for locators.</p>
+        <pre><code># Example in login_page.py
+from appium.webdriver.common.appiumby import AppiumBy
+
+class LoginPage(BasePage):
+    class Locators:
+        LOGIN_TITLE = (AppiumBy.ID, "loginTV")
+        LOGIN_BUTTON = (AppiumBy.ID, "loginBtn")
+        # ... other locators
+
+    def __init__(self, driver):
+        super().__init__(driver)
+
+    def get_login_page_title(self):
+        return self.get_element_text(*self.Locators.LOGIN_TITLE)
+
+    # ... other methods
+    </code></pre>
+        <p>This approach makes it clear which locators belong to the page and separates them from the page's logic.</p>
+        <h4>Benefits of This Approach:</h4>
+        <ul>
+            <li><b>Centralization:</b> All locators for a page are in one place, making them easy to find and manage.</li>
+            <li><b>Readability:</b> The code is cleaner as the locator definitions are separate from the page's methods.</li>
+            <li><b>Maintainability:</b> This is the biggest advantage. If a locator changes in the application, you only need to update it in one place. For example, if the development team changes the <code>loginBtn</code> from an ID to an accessibility ID, you only need to make a small change in the <code>Locators</code> class.</li>
+        </ul>
+        <pre><code># Before
+LOGIN_BUTTON = (AppiumBy.ID, "loginBtn")
+
+# After
+LOGIN_BUTTON = (AppiumBy.ACCESSIBILITY_ID, "login-button-acc-id")
+</code></pre>
+        <p>Notice that none of the methods using this locator (like <code>click_login_button()</code>) need to be changed. The change is isolated, reducing the risk of introducing bugs.</p>
+    </div>
+
+    <div class="slide">
+        <h2>2. Data-Driven Testing</h2>
+        <p>In our <code>test_saucelabs_flow.py</code>, we have a lot of hardcoded test data. This makes the test less flexible. We can use Pytest's <code>@pytest.mark.parametrize</code> to create data-driven tests.</p>
+        <p>First, let's create a file to store our data, for example <code>D5/data.py</code>:</p>
+        <pre><code># D5/data.py
+VALID_USER = {
+    "full_name_address": "Full Name",
+    "full_name_payment": "Full Name",
+    "address_line": "Address Line 1",
+    "city": "City",
+    "country": "Country",
+    "zip_code": "12345",
+    "card_number": "12345678",
+    "secure_code": "123",
+    "exp_date": "01/01"
+}
+
+PRODUCTS = {
+    "backpack": {
+        "name": "Sauce Labs Backpack (orange)",
+        "price": "$ 29.99"
+    }
+}
+    </code></pre>
+        <p>Then, we can use this data in our test file.</p>
+    </div>
+
+    <div class="slide">
+        <h2>3. Fluent Page Objects</h2>
+        <p>We can make our tests more readable by having methods that cause a page transition return the next page object. This is called a fluent interface or method chaining.</p>
+        <h4>How It Works:</h4>
+        <p>The core idea is simple: if an action on a page (like clicking a button) navigates the user to a new page, the method representing that action should return an instance of the next page object.</p>
+        <pre><code># In D5/login_page.py
+from D5.checkout_page import CheckoutPage
+
+class LoginPage(BasePage):
+    # ...
+    def login(self, username=None, password=None):
+        self.enter_username(username)
+        self.enter_password(password)
+        self.click_login_button()
+        # This action navigates to the Checkout Page, so we return a CheckoutPage object.
+        return CheckoutPage(self.driver)
+    </code></pre>
+        <h4>How This Improves the Test Script:</h4>
+        <p>This pattern makes the test flow much more logical and readable. Instead of creating all page objects at the beginning, we create them as we navigate through the app.</p>
+        <p><b>Without Fluent Interface (D4 style):</b></p>
+        <pre><code># All page objects are created at the start
+home_page = HomePage(driver)
+product_page = ProductPage(driver)
+cart_page = CartPage(driver)
+# ...and so on for every page...
+
+# The test needs to know which page object to use at each step
+home_page.select_orange_backpack()
+assert product_page.get_product_page_title() == "..." # Manually switch to product_page
+</code></pre>
+        <p><b>With Fluent Interface (D5 style):</b></p>
+        <pre><code># Start with the first page
+home_page = HomePage(driver)
+
+# The return value from one action is the page object for the next step
+product_page = home_page.select_orange_backpack()
+assert product_page.get_product_page_title() == "..."
+
+cart_page = product_page.click_cart_icon()
+assert cart_page.get_cart_page_title() == "My Cart"
+</code></pre>
+        <h4>Benefits of Fluent Page Objects:</h4>
+        <ul>
+            <li><b>Improved Readability:</b> The test script reads like a user's journey through the application, making the flow of actions clear and intuitive.</li>
+            <li><b>Reduced Boilerplate:</b> You no longer need to instantiate every possible page object at the beginning of your test. Objects are created only when they are needed.</li>
+            <li><b>Stronger Encapsulation:</b> The responsibility of knowing which page comes next is moved from the test script into the page object itself. The <code>LoginPage</code> knows that a successful login leads to the <code>CheckoutPage</code>.</li>
+        </ul>
+    </div>
+
+    <div class="slide">
+        <h2>4. Advanced Waits: From Static to Dynamic</h2>
+        <h3>The Problem with Static Waits (<code>time.sleep()</code>)</h3>
+        <p>In our initial test script (<code>D4/test_saucelabs_flow.py</code>), we used <code>time.sleep()</code> to handle delays in the UI. This is known as a static or "hard" wait, and it's a major anti-pattern in test automation.</p>
+        <ul>
+            <li><b>It creates slow tests:</b> If the app is fast, the test still waits for the full, hardcoded duration (e.g., <code>time.sleep(1)</code>). This adds up and makes your test suite unnecessarily slow.</li>
+            <li><b>It creates flaky tests:</b> If the app is slower than your static wait time (due to network lag, device performance, etc.), the test will try to interact with an element that hasn't appeared yet, causing a <code>NoSuchElementException</code> and failing the test.</li>
+        </ul>
+        <p>The solution is to use <strong>Dynamic or Explicit Waits</strong>.</p>
+
+        <h3>Introducing Explicit Waits</h3>
+        <p>An explicit wait is a dynamic wait where you tell the driver to wait for a certain condition to be met before proceeding. The driver will poll the DOM for a specified maximum amount of time until the condition is true. If the condition is met before the timeout, the test continues immediately. If the condition is not met within the timeout, it throws a <code>TimeoutException</code>.</p>
+        
+        <h4>Implementing Explicit Waits in our <code>BasePage</code></h4>
+        <p>Let's transform our <code>D4/base_page.py</code> into a robust, wait-aware base page.</p>
+        <p><b>Before (D4 - No Waits):</b></p>
+        <pre><code># In D4/base_page.py
+class BasePage:
+    def __init__(self, driver):
+        self.driver = driver
+
+    def find_element(self, by, locator):
+        # Directly finds the element. Fails immediately if not found.
+        return self.driver.find_element(by, locator)
+
+    def click_element(self, by, locator):
+        self.find_element(by, locator).click()
+    # ... other methods followed the same pattern
+</code></pre>
+        <p><b>After (D5 - With Explicit Waits):</b></p>
+        <p>First, we import the necessary modules from Selenium and initialize <code>WebDriverWait</code> in our constructor.</p>
+        <pre><code># In D5/base_page.py
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+
+class BasePage:
+    def __init__(self, driver):
+        self.driver = driver
+        # Initialize WebDriverWait with a 10-second timeout
+        self.wait = WebDriverWait(driver, 10)
+</code></pre>
+        <p>Next, we create reusable wait methods. Instead of directly finding an element, we wait for it to be in a certain state (e.g., visible, clickable).</p>
+        <pre><code># In D5/base_page.py
+    def wait_for_visibility_of_element(self, by, locator):
+        # Waits up to 10s for an element to be visible on the screen
+        return self.wait.until(EC.visibility_of_element_located((by, locator)))
+
+    def wait_for_element_to_be_clickable(self, by, locator):
+        # Waits up to 10s for an element to be visible and enabled
+        return self.wait.until(EC.element_to_be_clickable((by, locator)))
+</code></pre>
+        <p>Finally, we refactor our action methods (like <code>click</code> and <code>send_keys</code>) to use these new wait methods. This ensures that we never try to interact with an element before it's ready.</p>
+        <pre><code># In D5/base_page.py
+    def click_element(self, by, locator):
+        # Wait for the element to be clickable, then click it
+        self.wait_for_element_to_be_clickable((by, locator)).click()
+
+    def send_keys_to_element(self, by, locator, text):
+        # Wait for the element to be visible, then send keys
+        self.wait_for_visibility_of_element(by, locator).send_keys(text)
+</code></pre>
+        <p>With this refactoring, all our page object methods that inherit from <code>BasePage</code> are now robust and dynamic. We can remove all <code>time.sleep()</code> calls from our test script, resulting in faster and much more reliable tests.</p>
+    </div>
+
+    <div class="slide">
+        <h2>5. Handling Popups and Notifications</h2>
+        <p>Mobile applications frequently use native dialogs, popups, and notifications to interact with the user. Automating these requires specific strategies, as they often exist outside the application's main UI hierarchy.</p>
+        
+        <h3>5.1. Handling Native Android Popups (Alerts)</h3>
+        <p>Native popups, such as permission requests ("Allow App to access...") or confirmation dialogs, are part of the Android system UI. UiAutomator2 is excellent at handling these because it has access to the entire device screen, not just the app's window.</p>
+        <p>The locators for these popups are standard Android resource IDs. For example:</p>
+        <ul>
+            <li><b>Popup Title:</b> <code>com.android.internal:id/alertTitle</code> or <code>android:id/alertTitle</code></li>
+            <li><b>Popup Message:</b> <code>android:id/message</code></li>
+            <li><b>"OK" / "Allow" Button:</b> <code>android:id/button1</code></li>
+            <li><b>"Cancel" / "Deny" Button:</b> <code>android:id/button2</code></li>
+        </ul>
+        <p>We can create methods in our <code>HomePage</code> to interact with a sample popup.</p>
+        <pre><code># In D6/home_page.py
+class HomePage(BasePage):
+    class Locators:
+        # ... other locators
+        POPUP_TITLE = (AppiumBy.ID, "android:id/alertTitle")
+        POPUP_MESSAGE = (AppiumBy.ID, "android:id/message")
+        OK_BUTTON = (AppiumBy.ID, "android:id/button1")
+        CANCEL_BUTTON = (AppiumBy.ID, "android:id/button2")
+
+    # ...
+    def get_popup_title(self):
+        return self.get_element_text(*self.Locators.POPUP_TITLE)
+
+    def get_popup_message(self):
+        return self.get_element_text(*self.Locators.POPUP_MESSAGE)
+
+    def accept_popup(self):
+        self.click_element(*self.Locators.OK_BUTTON)
+
+    def dismiss_popup(self):
+        self.click_element(*self.Locators.CANCEL_BUTTON)
+</code></pre>
+
+        <h3>5.2. Handling Android Notifications</h3>
+        <p>Notifications appear in the system's notification shade at the top of the screen. To interact with them, our automation script needs to perform a sequence of actions:</p>
+        <ol>
+            <li><b>Open the notification shade:</b> This is done via a specific driver command.</li>
+            <li><b>Locate the notification:</b> Notifications also have standard resource IDs. We can look for the title and text.</li>
+            <li><b>Interact with the notification:</b> Click it, read its content, or dismiss it.</li>
+            <li><b>Close the notification shade:</b> Usually by pressing the back button.</li>
+        </ol>
+
+        <h4>Implementation in <code>BasePage</code></h4>
+        <p>Since notifications are a system-level feature, it's best to add helper methods to our <code>BasePage</code>.</p>
+        <pre><code># In D6/base_page.py
+class BasePage:
+    # ...
+    def open_notifications(self):
+        self.driver.open_notifications()
+
+    def is_notification_displayed(self, expected_title):
+        try:
+            notification_title_locator = (AppiumBy.XPATH, f"//*[@resource-id='android:id/title' and @text='{expected_title}']")
+            self.wait_for_visibility_of_element(*notification_title_locator)
+            return True
+        except TimeoutException:
+            return False
+        finally:
+            self.driver.back() # Always close the notification shade
+
+    def get_notification_text(self, expected_title):
+        try:
+            # Find the title to anchor our search
+            title_element = self.wait_for_visibility_of_element(AppiumBy.XPATH, f"//*[@resource-id='android:id/title' and @text='{expected_title}']")
+            # The notification text is often a sibling element
+            notification_text = title_element.find_element(AppiumBy.XPATH, "following-sibling::*[@resource-id='android:id/text']").text
+            return notification_text
+        except Exception:
+            return None
+        finally:
+            self.driver.back() # Always close the notification shade
+</code></pre>
+        <p>These methods allow our test script to open the notification shade, verify if a specific notification is present, and extract its content, ensuring the test is robust and handles system interactions correctly.</p>
+    </div>
+
+    <div class="slide">
+        <h2>Next Steps: Applying the Refactoring</h2>
+        <p>Now, let's apply these concepts to our Day 4 code. We will refactor the test script and page objects to be more robust and maintainable.</p>
+    </div>
+
+</body>
+</html>

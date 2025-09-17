@@ -40,6 +40,7 @@ class TestSauceLabsFlow:
         checkout_complete_page = CheckoutCompletePage(driver)
 
         # Validate HomePage
+        time.sleep(3)
         assert home_page.get_home_page_title() == self.home_page_title_expected, \
             f"Incorrect 'Home Page' Title. Actual: '{home_page.get_home_page_title()}' - Expected: '{self.home_page_title_expected}'"
 

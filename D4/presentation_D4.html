@@ -234,6 +234,51 @@ def test_product_selection(driver):
     </div>
 
     <div class="slide">
+        <h2>6. How to Run Pytest from the Terminal</h2>
+        <h3>Pytest offers a flexible command-line interface to run your tests.</h3>
+        <p>Once you have your tests and fixtures set up, you can run them from the terminal. Here are the most common commands:</p>
+        
+        <h4>Basic Command</h4>
+        <p>From the root of your project, simply run:</p>
+        <pre><code>pytest</code></pre>
+        <p>This command will automatically discover and run all tests in files named <code>test_*.py</code> or <code>*_test.py</code>.</p>
+
+        <h4>Run a Specific File</h4>
+        <p>To run all tests within a single file:</p>
+        <pre><code>pytest tests/test_login.py</code></pre>
+
+        <h4>Run a Specific Test Function</h4>
+        <p>To run a single, specific test function within a file, use <code>::</code> followed by the function name:</p>
+        <pre><code>pytest tests/test_login.py::test_invalid_user</code></pre>
+
+        <h4>Useful Options (Flags)</h4>
+        <ul>
+            <li>
+                <strong><code>-s</code></strong>: Show full output for <code>print()</code> statements and logs. Very useful for debugging.
+                <pre><code>pytest -s</code></pre>
+            </li>
+            <li>
+                <strong><code>-v</code></strong>: Run in verbose mode. This will list each test function by name with its status (PASSED, FAILED, etc.).
+                <pre><code>pytest -v</code></pre>
+            </li>
+            <li>
+                <strong><code>--tb=short</code></strong>: Show a shorter, more readable traceback when a test fails.
+                <pre><code>pytest --tb=short</code></pre>
+            </li>
+            <li>
+                <strong><code>-m &lt;marker&gt;</code></strong>: Run only the tests marked with a specific tag. You first need to mark a test function with <code>@pytest.mark.&lt;tag&gt;</code>.
+                <pre><code class="language-python">
+# In your test file:
+@pytest.mark.smoke
+def test_critical_feature():
+    ...
+                </code></pre>
+                <pre><code># In your terminal:
+pytest -m smoke</code></pre>
+            </li>
+        </ul>
+    </div>
+    <div class="slide">
         <h2>Conclusion</h2>
         <p>By adopting the Page Object Model and leveraging Pytest fixtures, we can build a more robust, maintainable, and scalable mobile test automation framework. These patterns promote clean code, reduce redundancy, and make it easier to manage changes in the application's UI.</p>
         <p>Happy Testing!</p>
