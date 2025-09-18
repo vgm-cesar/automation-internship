@@ -33,9 +33,3 @@ class HomePage(BasePage):
     
     def validate_notification_text(self):
         return self.get_notification_text(*self.Locators.NOTIFICATION_CARD)
-    
-    # pip3 install uiautodev
-    
-    # uiauto.dev
-    
-    # Remember to close the Appium Inspector instance

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 7 - Fault Handling & Organizing Suites</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1, h2, h3, h4 {
+            color: #0056b3;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        code {
+            font-family: "Courier New", Courier, monospace;
+            color: #d44950;
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .slide {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mobile Test Automation - Day 7</h1>
+    <h3>Fault Handling & Organizing Test Suites</h3>
+
+    <div class="slide">
+        <h2>1. Fault Handling: Capturing Evidence on Failure</h2>
+        <p>When an automated test fails, it's crucial to have as much information as possible to diagnose the issue. A common and effective way to do this is by automatically taking a screenshot of the screen at the exact moment of failure.</p>
+        <p>Pytest provides a special hook function, <code>pytest_runtest_makereport</code>, which allows us to inspect the result of a test and execute code based on it.</p>
+        
+        <h4>How to Implement Screenshot on Failure</h4>
+        <p>We can implement this logic directly in our <code>conftest.py</code> file. This file is special to Pytest and is where we define fixtures and hooks that are available to our entire test suite.</p>
+        <ol>
+            <li><b>Define the Hook:</b> We'll define the <code>pytest_runtest_makereport</code> function.</li>
+            <li><b>Check for Failure:</b> Inside the hook, we'll check if the test has failed during the "call" phase.</li>
+            <li><b>Access the Driver:</b> If it failed, we'll get access to the active <code>driver</code> fixture.</li>
+            <li><b>Take the Screenshot:</b> We'll use the driver's <code>get_screenshot_as_file()</code> method to save a PNG image. It's good practice to name the screenshot file after the failed test for easy identification.</li>
+        </ol>
+
+        <pre><code># In D7/conftest.py
+import pytest
+from appium import webdriver
+from appium.options.common.base import AppiumOptions
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    rep = outcome.get_result()
+
+    if rep.when == "call" and rep.failed:
+        if "driver" in item.fixturenames:
+            driver = item.funcargs["driver"]
+            screenshot_name = f"screenshot_{item.name}.png"
+            driver.get_screenshot_as_file(screenshot_name)
+            print(f"Screenshot saved as {screenshot_name}")
+
+# The driver fixture remains the same as in D5
+@pytest.fixture(scope="function")
+def driver():
+    # ... (driver setup code from D5)
+    # ...
+    yield _driver
+    _driver.quit()
+</code></pre>
+        <p>With this implementation, any time a test fails, a screenshot will be automatically saved in the root directory of the project, providing a clear visual of the app's state at the time of the error.</p>
+    </div>
+
+    <div class="slide">
+        <h2>2. Organizing Test Suites with Markers</h2>
+        <p>As a test suite grows, you'll often want to run only a subset of your tests. For example, you might want to run a quick "smoke test" suite to verify basic functionality, or a full "regression" suite to check for any unintended side effects of new code.</p>
+        <p>Pytest's "markers" are a powerful feature that allows you to tag your tests with custom labels. You can then use these labels to selectively run or skip tests.</p>
+
+        <h4>How to Use Markers</h4>
+        <ol>
+            <li><b>Register Markers (Optional but Recommended):</b> To avoid typos and to have a clear record of your custom markers, you can register them in a <code>pytest.ini</code> file in your project's root directory.</li>
+            <li><b>Apply Markers to Tests:</b> You apply markers to test functions or classes using the <code>@pytest.mark.marker_name</code> decorator.</li>
+            <li><b>Run Tests by Marker:</b> You use the <code>-m</code> command-line option to specify which markers to run.</li>
+        </ol>
+
+        <h4>The Role of <code>pytest.ini</code></h4>
+        <p>The <code>pytest.ini</code> file is a configuration file for Pytest. It allows you to change default behaviors, register custom markers, define test path locations, and much more. It acts as a central point of configuration for your entire test suite.</p>
+        <p><b>1. Registering Markers in <code>pytest.ini</code>:</b></p>
+        <p>While you can use any marker name without registering it, doing so is highly recommended. Registering markers provides several benefits:</p>
+        <ul>
+            <li><b>Prevents Typos:</b> If you try to run a test with a marker that isn't registered, Pytest will raise an error, helping you catch typos (e.g., `regresion` instead of `regression`).</li>
+            <li><b>Self-documenting:</b> The `pytest.ini` file becomes a central place to see all available markers and what they mean.</li>
+            <li><b>Clearer Output:</b> Registered markers are listed when you run `pytest --markers`.</li>
+        </ul>
+        <pre><code># In D7/pytest.ini
+[pytest]
+markers =
+    smoke: Marks tests as smoke tests for basic functionality checks.
+    regression: Marks tests as part of the full regression suite.
+    login: Marks tests related to the login feature.
+    purchase: Marks tests related to the product purchase flow.
+</code></pre>
+        <h4>Other Common <code>pytest.ini</code> Configurations</h4>
+        <p>Besides markers, you can configure many other aspects of your test runs:</p>
+        <pre><code>[pytest]
+# ... markers definition ...
+
+# Add default command-line options
+# -v for verbose, -s to show print statements
+addopts = -v -s
+
+# Define where Pytest should look for tests
+testpaths =
+    tests
+    D7
+
+# Define filename patterns for test discovery
+python_files = test_*.py *_test.py
+
+# Define class and function name patterns
+python_classes = Test*
+python_functions = test_*
+</code></pre>
+        <ul>
+            <li><code>addopts</code>: Specifies command-line arguments that should be used by default on every run, saving you from typing them every time.</li>
+            <li><code>testpaths</code>: Tells Pytest which directories to search for tests in. This is useful for organizing your project.</li>
+            <li><code>python_files</code>, <code>python_classes</code>, <code>python_functions</code>: Customize the naming conventions Pytest uses to discover tests.</li>
+        </ul>
+        <p>By using a <code>pytest.ini</code> file, you create a more robust, predictable, and maintainable testing framework.</p>
+
+        <p><b>2. Apply Markers in the Test File:</b></p>
+        <p>We can apply markers to an entire class or to individual test methods. Let's create two test files to demonstrate this.</p>
+        <pre><code># In D7/test_smoke.py
+import pytest
+
+@pytest.mark.smoke
+class TestLogin:
+    def test_valid_login(self, driver):
+        # ... test logic for a valid login ...
+        assert True
+
+    def test_invalid_login(self, driver):
+        # ... test logic for an invalid login ...
+        assert True
+</code></pre>
+        <pre><code># In D7/test_regression.py
+import pytest
+
+@pytest.mark.regression
+class TestProductPurchase:
+    def test_purchase_flow(self, driver):
+        # ... full purchase flow from D5 ...
+        assert True
+</code></pre>
+
+        <p><b>3. Running Tests with Markers:</b></p>
+        <p>Now you can run specific suites from your terminal:</p>
+        <pre><code># Run only the smoke tests
+pytest -m smoke
+
+# Run only the regression tests
+pytest -m regression
+
+# Run tests that are marked as smoke AND regression
+pytest -m "smoke and regression"
+
+# Run tests that are marked as smoke OR regression
+pytest -m "smoke or regression"
+</code></pre>
+        <p>Using markers is a scalable way to organize and manage your test execution as your project grows in complexity.</p>
+    </div>
+
+    <div class="slide">
+        <h2>3. Error Handling with Try-Except Blocks</h2>
+        <p>Even with robust waits, tests can sometimes fail due to unexpected conditions. A key part of creating resilient automation is handling potential errors gracefully. Python's <code>try...except</code> blocks are perfect for this.</p>
+        <p>Common exceptions in Appium/Selenium include:</p>
+        <ul>
+            <li><code>NoSuchElementException</code>: Occurs when the driver cannot find an element with the given locator.</li>
+            <li><code>TimeoutException</code>: Thrown by explicit waits when a condition is not met within the specified timeout period.</li>
+        </ul>
+
+        <h4>Why Handle Errors?</h4>
+        <p>Instead of letting the test crash, handling errors allows you to perform alternative actions, log more detailed information, or make assertions about the absence of an element, which can be a valid test condition.</p>
+
+        <h4>Example: Checking for an Element's Presence</h4>
+        <p>In our <code>D5/base_page.py</code>, the <code>is_element_displayed</code> method is a perfect example of error handling. It tries to find an element, but instead of failing the test if it's not found, it catches the <code>TimeoutException</code> and returns <code>False</code>.</p>
+        <pre><code># In D7/pages/base_page.py
+from selenium.common.exceptions import TimeoutException
+
+# ...
+
+def is_element_displayed(self, by, locator):
+    try:
+        # We try to wait for the element to be visible
+        self.wait_for_visibility_of_element(by, locator)
+        # If the above line doesn't throw an exception, the element is visible
+        return True
+    except TimeoutException:
+        # If a TimeoutException occurs, it means the element was not found in time
+        return False
+</code></pre>
+        <p>This simple but powerful pattern allows our test scripts to make assertions about the state of the UI without crashing. For example, in our login test, we can check if an error message is displayed or not.</p>
+        <pre><code># In a test file
+# This assertion passes if the error message is NOT displayed
+assert not login_page.is_username_error_displayed()
+
+# This assertion passes if the error message IS displayed
+assert login_page.is_username_error_displayed()
+</code></pre>
+        <p>By wrapping potentially failing operations in <code>try...except</code> blocks, you can build more intelligent and resilient test automation that provides clearer results, distinguishing between a failed step and a verified absence of an element.</p>
+    </div>
+
+    <div class="slide">
+        <h2>4. Advanced Error Handling: Robust Fixture Setup</h2>
+        <p>Error handling isn't just for test logic; it's also critical during the setup phase. What happens if the Appium server isn't running when you start your tests? Currently, the entire test suite would crash with a connection error.</p>
+        <p>We can make our <code>driver</code> fixture more resilient by wrapping the driver initialization in a <code>try...except</code> block.</p>
+        
+        <h4>Making the Driver Fixture More Robust</h4>
+        <p>By catching exceptions during the <code>webdriver.Remote</code> call, we can prevent the test run from crashing. Instead, we can use <code>pytest.skip()</code> to gracefully skip the tests that depend on the driver, with a clear message explaining why.</p>
+
+        <pre><code># In D7/conftest.py
+import pytest
+from appium import webdriver
+# ... other imports
+
+@pytest.fixture(scope="function")
+def driver():
+    _driver = None
+    try:
+        options = AppiumOptions()
+        # ... capabilities ...
+        _driver = webdriver.Remote("http://127.0.0.1:4723", options=options)
+    except Exception as e:
+        # If driver creation fails, skip the test with a message
+        pytest.skip(f"Failed to create Appium driver: {e}")
+
+    # Yield the driver to the test
+    yield _driver
+
+    # Teardown: only quit if the driver was successfully created
+    if _driver:
+        _driver.quit()
+</code></pre>
+        <h4>Benefits of a Robust Fixture</h4>
+        <ul>
+            <li><b>Prevents Crashing:</b> The test suite won't come to a halt just because of a setup issue (like a forgotten Appium server).</li>
+            <li><b>Clearer Reports:</b> Test reports will show tests as "skipped" with a descriptive reason, which is more informative than a cryptic connection error.</li>
+            <li><b>Improved Stability:</b> This makes your CI/CD pipeline more stable, as setup failures won't be misinterpreted as test failures.</li>
+        </ul>
+        <p>This approach ensures that your test setup is as resilient as your test logic, leading to a more reliable and maintainable automation framework.</p>
+    </div>
+</body>
+</html>
