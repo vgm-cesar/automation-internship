@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Day 5 - Advanced Automation Topics</title>
+    <title>Day 6</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -50,125 +50,11 @@
     </style>
 </head>
 <body>
-    <h1>Mobile Test Automation - Day 5</h1>
+    <h1>Mobile Test Automation - Day 6</h1>
     <h3>Refactoring, Advanced Waits, and Popups</h3>
 
-     <!-- <p>As our test suite grows, it's essential to keep our code clean and well-organized. Refactoring is the process of restructuring existing computer code—changing the factoring—without changing its external behavior. Let's look at some ways we can refactor our project from Day 4.</p> -->
-
     <div class="slide">
-        <h2>1. Improving Locators Strategy</h2>
-        <p>In our current page objects, we are defining locators inside the <code>__init__</code> method. While this works, a better practice for readability and maintenance is to group them. One way is to use a nested class for locators.</p>
-        <pre><code># Example in login_page.py
-from appium.webdriver.common.appiumby import AppiumBy
-
-class LoginPage(BasePage):
-    class Locators:
-        LOGIN_TITLE = (AppiumBy.ID, "loginTV")
-        LOGIN_BUTTON = (AppiumBy.ID, "loginBtn")
-        # ... other locators
-
-    def __init__(self, driver):
-        super().__init__(driver)
-
-    def get_login_page_title(self):
-        return self.get_element_text(*self.Locators.LOGIN_TITLE)
-
-    # ... other methods
-    </code></pre>
-        <p>This approach makes it clear which locators belong to the page and separates them from the page's logic.</p>
-        <h4>Benefits of This Approach:</h4>
-        <ul>
-            <li><b>Centralization:</b> All locators for a page are in one place, making them easy to find and manage.</li>
-            <li><b>Readability:</b> The code is cleaner as the locator definitions are separate from the page's methods.</li>
-            <li><b>Maintainability:</b> This is the biggest advantage. If a locator changes in the application, you only need to update it in one place. For example, if the development team changes the <code>loginBtn</code> from an ID to an accessibility ID, you only need to make a small change in the <code>Locators</code> class.</li>
-        </ul>
-        <pre><code># Before
-LOGIN_BUTTON = (AppiumBy.ID, "loginBtn")
-
-# After
-LOGIN_BUTTON = (AppiumBy.ACCESSIBILITY_ID, "login-button-acc-id")
-</code></pre>
-        <p>Notice that none of the methods using this locator (like <code>click_login_button()</code>) need to be changed. The change is isolated, reducing the risk of introducing bugs.</p>
-    </div>
-
-    <div class="slide">
-        <h2>2. Data-Driven Testing</h2>
-        <p>In our <code>test_saucelabs_flow.py</code>, we have a lot of hardcoded test data. This makes the test less flexible. We can use Pytest's <code>@pytest.mark.parametrize</code> to create data-driven tests.</p>
-        <p>First, let's create a file to store our data, for example <code>D5/data.py</code>:</p>
-        <pre><code># D5/data.py
-VALID_USER = {
-    "full_name_address": "Full Name",
-    "full_name_payment": "Full Name",
-    "address_line": "Address Line 1",
-    "city": "City",
-    "country": "Country",
-    "zip_code": "12345",
-    "card_number": "12345678",
-    "secure_code": "123",
-    "exp_date": "01/01"
-}
-
-PRODUCTS = {
-    "backpack": {
-        "name": "Sauce Labs Backpack (orange)",
-        "price": "$ 29.99"
-    }
-}
-    </code></pre>
-        <p>Then, we can use this data in our test file.</p>
-    </div>
-
-    <div class="slide">
-        <h2>3. Fluent Page Objects</h2>
-        <p>We can make our tests more readable by having methods that cause a page transition return the next page object. This is called a fluent interface or method chaining.</p>
-        <h4>How It Works:</h4>
-        <p>The core idea is simple: if an action on a page (like clicking a button) navigates the user to a new page, the method representing that action should return an instance of the next page object.</p>
-        <pre><code># In D5/login_page.py
-from D5.checkout_page import CheckoutPage
-
-class LoginPage(BasePage):
-    # ...
-    def login(self, username=None, password=None):
-        self.enter_username(username)
-        self.enter_password(password)
-        self.click_login_button()
-        # This action navigates to the Checkout Page, so we return a CheckoutPage object.
-        return CheckoutPage(self.driver)
-    </code></pre>
-        <h4>How This Improves the Test Script:</h4>
-        <p>This pattern makes the test flow much more logical and readable. Instead of creating all page objects at the beginning, we create them as we navigate through the app.</p>
-        <p><b>Without Fluent Interface (D4 style):</b></p>
-        <pre><code># All page objects are created at the start
-home_page = HomePage(driver)
-product_page = ProductPage(driver)
-cart_page = CartPage(driver)
-# ...and so on for every page...
-
-# The test needs to know which page object to use at each step
-home_page.select_orange_backpack()
-assert product_page.get_product_page_title() == "..." # Manually switch to product_page
-</code></pre>
-        <p><b>With Fluent Interface (D5 style):</b></p>
-        <pre><code># Start with the first page
-home_page = HomePage(driver)
-
-# The return value from one action is the page object for the next step
-product_page = home_page.select_orange_backpack()
-assert product_page.get_product_page_title() == "..."
-
-cart_page = product_page.click_cart_icon()
-assert cart_page.get_cart_page_title() == "My Cart"
-</code></pre>
-        <h4>Benefits of Fluent Page Objects:</h4>
-        <ul>
-            <li><b>Improved Readability:</b> The test script reads like a user's journey through the application, making the flow of actions clear and intuitive.</li>
-            <li><b>Reduced Boilerplate:</b> You no longer need to instantiate every possible page object at the beginning of your test. Objects are created only when they are needed.</li>
-            <li><b>Stronger Encapsulation:</b> The responsibility of knowing which page comes next is moved from the test script into the page object itself. The <code>LoginPage</code> knows that a successful login leads to the <code>CheckoutPage</code>.</li>
-        </ul>
-    </div>
-
-    <div class="slide">
-        <h2>4. Advanced Waits: From Static to Dynamic</h2>
+        <h2>1. Advanced Waits: From Static to Dynamic</h2>
         <h3>The Problem with Static Waits (<code>time.sleep()</code>)</h3>
         <p>In our initial test script (<code>D4/test_saucelabs_flow.py</code>), we used <code>time.sleep()</code> to handle delays in the UI. This is known as a static or "hard" wait, and it's a major anti-pattern in test automation.</p>
         <ul>
@@ -233,7 +119,7 @@ class BasePage:
     </div>
 
     <div class="slide">
-        <h2>5. Handling Popups and Notifications</h2>
+        <h2>2. Handling Popups and Notifications</h2>
         <p>Mobile applications frequently use native dialogs, popups, and notifications to interact with the user. Automating these requires specific strategies, as they often exist outside the application's main UI hierarchy.</p>
         
         <h3>5.1. Handling Native Android Popups (Alerts)</h3>

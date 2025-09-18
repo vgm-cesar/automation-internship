@@ -13,7 +13,6 @@ def driver():
         "appium:ensureWebviewsHavePages": True,
         "appium:nativeWebScreenshot": True,
         "appium:newCommandTimeout": 3600,
-        "appium:connectHardwareKeyboard": True
     })
     _driver = webdriver.Remote("http://127.0.0.1:4723", options=options)
     yield _driver

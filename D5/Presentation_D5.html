@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Day 5 - Advanced Automation Topics</title>
+    <title>Day 5</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -165,92 +165,6 @@ assert cart_page.get_cart_page_title() == "My Cart"
             <li><b>Reduced Boilerplate:</b> You no longer need to instantiate every possible page object at the beginning of your test. Objects are created only when they are needed.</li>
             <li><b>Stronger Encapsulation:</b> The responsibility of knowing which page comes next is moved from the test script into the page object itself. The <code>LoginPage</code> knows that a successful login leads to the <code>CheckoutPage</code>.</li>
         </ul>
-    </div>
-
-    <div class="slide">
-        <h2>4. Advanced Waits: From Static to Dynamic</h2>
-        <h3>The Problem with Static Waits (<code>time.sleep()</code>)</h3>
-        <p>In our initial test script (<code>D4/test_saucelabs_flow.py</code>), we used <code>time.sleep()</code> to handle delays in the UI. This is known as a static or "hard" wait, and it's a major anti-pattern in test automation.</p>
-        <ul>
-            <li><b>It creates slow tests:</b> If the app is fast, the test still waits for the full, hardcoded duration (e.g., <code>time.sleep(1)</code>). This adds up and makes your test suite unnecessarily slow.</li>
-            <li><b>It creates flaky tests:</b> If the app is slower than your static wait time (due to network lag, device performance, etc.), the test will try to interact with an element that hasn't appeared yet, causing a <code>NoSuchElementException</code> and failing the test.</li>
-        </ul>
-        <p>The solution is to use <strong>Dynamic or Explicit Waits</strong>.</p>
-
-        <h3>Introducing Explicit Waits</h3>
-        <p>An explicit wait is a dynamic wait where you tell the driver to wait for a certain condition to be met before proceeding. The driver will poll the DOM for a specified maximum amount of time until the condition is true. If the condition is met before the timeout, the test continues immediately. If the condition is not met within the timeout, it throws a <code>TimeoutException</code>.</p>
-        
-        <h4>Implementing Explicit Waits in our <code>BasePage</code></h4>
-        <p>Let's transform our <code>D4/base_page.py</code> into a robust, wait-aware base page.</p>
-        <p><b>Before (D4 - No Waits):</b></p>
-        <pre><code># In D4/base_page.py
-class BasePage:
-    def __init__(self, driver):
-        self.driver = driver
-
-    def find_element(self, by, locator):
-        # Directly finds the element. Fails immediately if not found.
-        return self.driver.find_element(by, locator)
-
-    def click_element(self, by, locator):
-        self.find_element(by, locator).click()
-    # ... other methods followed the same pattern
-</code></pre>
-        <p><b>After (D5 - With Explicit Waits):</b></p>
-        <p>First, we import the necessary modules from Selenium and initialize <code>WebDriverWait</code> in our constructor.</p>
-        <pre><code># In D5/base_page.py
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
-
-class BasePage:
-    def __init__(self, driver):
-        self.driver = driver
-        # Initialize WebDriverWait with a 10-second timeout
-        self.wait = WebDriverWait(driver, 10)
-</code></pre>
-        <p>Next, we create reusable wait methods. Instead of directly finding an element, we wait for it to be in a certain state (e.g., visible, clickable).</p>
-        <pre><code># In D5/base_page.py
-    def wait_for_visibility_of_element(self, by, locator):
-        # Waits up to 10s for an element to be visible on the screen
-        return self.wait.until(EC.visibility_of_element_located((by, locator)))
-
-    def wait_for_element_to_be_clickable(self, by, locator):
-        # Waits up to 10s for an element to be visible and enabled
-        return self.wait.until(EC.element_to_be_clickable((by, locator)))
-</code></pre>
-        <p>Finally, we refactor our action methods (like <code>click</code> and <code>send_keys</code>) to use these new wait methods. This ensures that we never try to interact with an element before it's ready.</p>
-        <pre><code># In D5/base_page.py
-    def click_element(self, by, locator):
-        # Wait for the element to be clickable, then click it
-        self.wait_for_element_to_be_clickable((by, locator)).click()
-
-    def send_keys_to_element(self, by, locator, text):
-        # Wait for the element to be visible, then send keys
-        self.wait_for_visibility_of_element(by, locator).send_keys(text)
-</code></pre>
-        <p>With this refactoring, all our page object methods that inherit from <code>BasePage</code> are now robust and dynamic. We can remove all <code>time.sleep()</code> calls from our test script, resulting in faster and much more reliable tests.</p>
-    </div>
-
-    <div class="slide">
-        <h2>5. Handling Pop up and Notifications</h2>
-        <p>Toast messages are a special case. They are short-lived popups that are not part of the standard view hierarchy, so they can't be located by their ID or other common attributes.</p>
-        <p>To locate a toast, we need to use an XPath that searches for the <code>android.widget.Toast</code> class. The text of the toast is usually in its <code>@text</code> attribute.</p>
-        <pre><code># Method to get toast message text in base_page.py
-
-def get_toast_message(self):
-    toast_locator = (AppiumBy.XPATH, "//android.widget.Toast")
-    try:
-        toast = self.wait_for_visibility_of_element(*toast_locator)
-        return toast.text
-    except TimeoutException:
-        return None
-    </code></pre>
-        <blockquote>
-            <h4>Why not add the toast locator to the <code>Locators</code> class?</h4>
-            <p>The toast locator <code>//android.widget.Toast</code> is generic and not specific to any single page. Since a toast can appear on any screen of the application, it makes more sense to keep this logic in the <code>BasePage</code> and not tie it to a specific page's locators.</p>
-        </blockquote>
-        <p>We can then use this method to assert that a toast message is displayed when expected.</p>
     </div>
 
     <div class="slide">

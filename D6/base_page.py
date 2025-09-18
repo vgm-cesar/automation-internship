@@ -37,7 +37,5 @@ class BasePage:
         self.wait_for_visibility_of_element(by, locator)
         return True
 
-    def get_notification_text(self, by, locator, expected_title):
-        title_element = self.wait_for_visibility_of_element(by, locator)
-        notification_text = title_element.find_element(by, locator).text
-        return notification_text
+    def get_notification_text(self, by, locator):
+        return self.find_element(by, locator).text

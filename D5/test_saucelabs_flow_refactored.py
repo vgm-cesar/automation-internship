@@ -1,4 +1,5 @@
 import pytest
+import time
 from D5.home_page import HomePage
 from D5.data import VALID_USER, PRODUCTS
 
@@ -6,6 +7,7 @@ from D5.data import VALID_USER, PRODUCTS
 # @pytest.mark.parametrize("product_key", ["backpack"])
 @pytest.mark.parametrize("product_key", ["backpack", "backpack_red"]) # Parameters passed to test function
 def test_saucelabs_product_purchase_flow(driver, product_key):
+    time.sleep(1)
     user_data = VALID_USER
     product_data = PRODUCTS[product_key]
 
@@ -13,6 +15,7 @@ def test_saucelabs_product_purchase_flow(driver, product_key):
     assert home_page.get_home_page_title() == "Products"
 
     product_page = home_page.select_orange_backpack()
+    time.sleep(1)
     assert product_page.get_product_page_title() == product_data["name"]
     assert product_page.get_product_price() == product_data["price"]
 
@@ -34,6 +37,7 @@ def test_saucelabs_product_purchase_flow(driver, product_key):
     assert product_page.get_cart_icon_count() > 0
     assert product_page.get_cart_icon_count() == 2
     cart_page = product_page.click_cart_icon()
+    time.sleep(1)
 
     assert cart_page.get_cart_page_title() == "My Cart"
     assert cart_page.get_product_title() == product_data["name"]
@@ -41,18 +45,23 @@ def test_saucelabs_product_purchase_flow(driver, product_key):
     assert cart_page.get_product_quantity() == 2
     assert cart_page.get_total_items_text() == "2 Items"
     login_page = cart_page.click_checkout_button()
+    time.sleep(1)
 
     assert login_page.get_login_page_title() == "Login"
     login_page.click_login_button()
+    time.sleep(1)
     assert login_page.is_username_error_displayed()
     login_page.enter_username()
     login_page.click_login_button()
+    time.sleep(0.5)
     assert login_page.is_password_error_displayed()
     login_page.enter_password()
     checkout_page = login_page.login()
+    time.sleep(1)
 
     assert checkout_page.get_checkout_page_title() == "Checkout"
     payment_page = checkout_page.click_payment_button()
+    time.sleep(0.5)
     assert checkout_page.is_full_name_error_displayed()
     assert checkout_page.is_address1_error_displayed()
     assert checkout_page.is_city_error_displayed()
@@ -67,6 +76,7 @@ def test_saucelabs_product_purchase_flow(driver, product_key):
         user_data["country"]
     )
     payment_page = checkout_page.click_payment_button()
+    time.sleep(0.5)
 
     assert payment_page.get_payment_page_title() == "Checkout"
     review_order_page = payment_page.click_payment_button()
@@ -82,6 +92,7 @@ def test_saucelabs_product_purchase_flow(driver, product_key):
         user_data["secure_code"]
     )
     review_order_page = payment_page.click_payment_button()
+    time.sleep(1)
 
     assert review_order_page.get_checkout_title() == "Checkout"
     assert review_order_page.get_review_order_title() == "Review your order"
@@ -105,9 +116,11 @@ def test_saucelabs_product_purchase_flow(driver, product_key):
     assert review_order_page.get_total_amount() == "$ " + str(total)
 
     checkout_complete_page = review_order_page.click_place_order_button()
+    time.sleep(1)
 
     assert checkout_complete_page.get_checkout_complete_title() == "Checkout Complete"
     checkout_complete_page.click_shopping_button()
+    time.sleep(1)
 
     assert home_page.get_home_page_title() == "Products"
     assert product_page.get_cart_icon_count() == 0
