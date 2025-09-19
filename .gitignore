@@ -207,3 +207,4 @@ pyrightconfig.json
 # Custom Test Automation Artifacts
 screenshots/
 videos/
+.vscode/

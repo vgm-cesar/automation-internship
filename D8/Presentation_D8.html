@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 8 - Advanced Evidence: Logs, Screenshots, and Videos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1, h2, h3, h4 {
+            color: #0056b3;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        code {
+            font-family: "Courier New", Courier, monospace;
+            color: #d44950;
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .slide {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mobile Test Automation - Day 8</h1>
+    <h3>Advanced Evidence: Logs, Screenshots, and Videos</h3>
+
+    <div class="slide">
+        <h2>1. Integrating Python's Logging Module</h2>
+        <p>While <code>print()</code> statements are useful for quick debugging, a professional testing framework requires a more robust solution. Python's built-in <code>logging</code> module provides a flexible and powerful way to track events, debug issues, and record the flow of your tests.</p>
+        
+        <h4>Why Use Logging?</h4>
+        <ul>
+            <li><b>Severity Levels:</b> You can categorize messages (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL), allowing you to filter output based on importance.</li>
+            <li><b>Configurability:</b> You can easily direct logs to different outputs (console, files) and control the format of the messages.</li>
+            <li><b>Contextual Information:</b> Logs can automatically include timestamps, the name of the module, and the line number where the log was made.</li>
+        </ul>
+
+        <h4>Setting Up a Centralized Logger</h4>
+        <p>A good practice is to create a centralized logging configuration that the entire framework can use. We can create a <code>logger.py</code> file for this.</p>
+        <pre><code># In D8/utils/logger.py
+import logging
+import sys
+
+def setup_logger():
+    logger = logging.getLogger("automation_tests")
+    logger.setLevel(logging.INFO)
+
+    # Create a handler to print to the console
+    handler = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+
+    # Add the handler to the logger
+    if not logger.handlers:
+        logger.addHandler(handler)
+
+    return logger
+
+log = setup_logger()
+</code></pre>
+        <p>Now, in any part of our framework (like the <code>base_page.py</code>), we can import and use this logger.</p>
+        <pre><code># In D8/pages/base_page.py
+from D8.utils.logger import log
+
+class BasePage:
+    # ...
+    def click_element(self, by, locator):
+        log.info(f"Clicking element with locator: {locator}")
+        try:
+            self.wait_for_element_to_be_clickable((by, locator)).click()
+            log.info("Element clicked successfully.")
+        except Exception as e:
+            log.error(f"Failed to click element with locator: {locator}", exc_info=True)
+            raise
+</code></pre>
+    </div>
+
+    <div class="slide">
+        <h2>3. Viewing Live Logs During Test Execution</h2>
+        <p>You've set up your logger and added it to your page objects, but when you run <code>pytest</code>, you might not see your log messages in the console in real-time. This is because Pytest, by default, captures all output (including logs) and only displays it for failed tests. To see your logs live, you need to configure Pytest.</p>
+
+        <h4>Method 1: Using Command-Line Options</h4>
+        <p>The easiest way to see live logs is by adding a few flags to your <code>pytest</code> command:</p>
+        <pre><code>pytest --log-cli-level=INFO --log-cli=true -s
+</code></pre>
+        <ul>
+            <li><code>--log-cli-level=INFO</code>: This tells Pytest to display logs that are at the INFO level or higher (INFO, WARNING, ERROR, CRITICAL).</li>
+            <li><code>--log-cli=true</code>: This explicitly enables the live logging feature.</li>
+            <li><code>-s</code>: This is a standard Pytest flag that disables all output capturing, allowing your logs (and any <code>print</code> statements) to appear in the console immediately.</li>
+        </ul>
+
+        <h4>Method 2: Configuring <code>pytest.ini</code></h4>
+        <p>Typing those flags every time can be tedious. A better, more permanent solution is to add these settings to your <code>pytest.ini</code> file. This ensures that live logging is enabled by default for every test run.</p>
+        <pre><code># In D8/pytest.ini
+[pytest]
+# ... other settings ...
+
+# Logging configuration
+log_cli = true
+log_cli_level = INFO
+log_format = %(asctime)s - %(levelname)s - %(message)s
+log_date_format = %Y-%m-%d %H:%M:%S
+</code></pre>
+        <ul>
+            <li><code>log_cli = true</code>: Enables live logging.</li>
+            <li><code>log_cli_level = INFO</code>: Sets the default log level to display.</li>
+            <li><code>log_format</code> and <code>log_date_format</code>: These allow you to control the format of the log messages directly from the Pytest configuration, which can override the format set in your `logger.py` if you wish.</li>
+        </ul>
+        <p>With this configuration in place, simply running <code>pytest</code> will now give you a real-time stream of your custom log messages, making it much easier to follow the flow of your tests and debug issues as they happen.</p>
+    </div>
+
+    <div class="slide">
+        <h2>2. Advanced Screenshots and Video Recording</h2>
+        <p>While taking a screenshot on failure is essential, sometimes you need more context. Appium provides capabilities to record a video of the entire test session, giving you a complete visual record of the execution.</p>
+
+        <h4>Enabling Video Recording</h4>
+        <p>Video recording can be enabled via an Appium capability. We can add this to our <code>driver</code> fixture in <code>conftest.py</code>.</p>
+        <pre><code># In D8/conftest.py
+# ...
+    options.load_capabilities({
+        # ... other capabilities
+        "appium:androidScreenshotOnFai": True, # A redundant but good practice capability
+        "appium:nativeWebScreenshot": True,
+        "appium:recordVideo": "true", # Enable video recording
+        "appium:videoType": "mpeg4"  # Specify video format
+    })
+# ...
+</code></pre>
+        <p>When this is enabled, Appium will record the screen during the test. After the session ends (<code>driver.quit()</code>), the video file (in Base64 format) is included in the Appium server logs. To save it, you need to parse the logs or use a more advanced setup with a cloud testing provider that handles this automatically.</p>
+
+        <h4>Saving Video Files Manually</h4>
+        <p>For local runs, a more direct approach is to use Appium's built-in screen recording commands. We can wrap our test execution with these commands in the <code>driver</code> fixture.</p>
+        <pre><code># In D8/conftest.py
+@pytest.fixture(scope="function")
+def driver(request): # request is a built-in pytest fixture
+    # ... (driver setup) ...
+    try:
+        _driver = webdriver.Remote("http://127.0.0.1:4723", options=options)
+        _driver.start_recording_screen() # Start recording
+    except Exception as e:
+        pytest.skip(f"Failed to create Appium driver: {e}")
+
+    yield _driver
+
+    # Teardown
+    if _driver:
+        # Stop recording and get the video data
+        video_data = _driver.stop_recording_screen()
+        if video_data:
+            # Create a unique filename for the video
+            video_filename = f"video_{request.node.name}.mp4"
+            with open(video_filename, "wb") as f:
+                f.write(base64.b64decode(video_data))
+            print(f"Video saved as {video_filename}")
+        _driver.quit()
+</code></pre>
+        <p>This implementation starts recording when the driver is created and stops it during teardown, saving the video file with a name corresponding to the test that was run. This provides an invaluable artifact for debugging complex UI interactions and failures.</p>
+    </div>
+
+    <div class="slide">
+        <h2>4. Troubleshooting: Why Are My Logs Duplicated?</h2>
+        <p>You might notice that after configuring both your custom logger and Pytest's logging, your log messages appear twice in the console. This is a common issue caused by <b>log propagation</b>.</p>
+
+        <h4>Understanding Log Propagation</h4>
+        <p>In Python's logging module, loggers are organized in a hierarchy. When your custom logger (e.g., "automation_tests") handles a message, it can also pass that message up to its parent, the "root" logger. Here's the flow that causes duplication:</p>
+        <ol>
+            <li>Your code calls <code>log.info("...")</code>.</li>
+            <li>Your custom logger ("automation_tests") receives the message, formats it, and prints it to the console via its own handler.</li>
+            <li>The message is then "propagated" to the root logger.</li>
+            <li>Pytest's live logging (`log_cli`) has also configured the root logger, which receives the propagated message and prints it to the console a second time.</li>
+        </ol>
+
+        <h4>The Solution: Disable Propagation</h4>
+        <p>To fix this, we need to tell our custom logger that it should *not* propagate its messages after handling them. We can do this by setting its <code>propagate</code> attribute to <code>False</code>.</p>
+        <pre><code># In D8/utils/logger.py
+
+def setup_logger():
+    # ... (logger setup) ...
+
+    # Add the handler to the logger
+    logger.addHandler(handler)
+
+    # Prevent the logger from propagating messages to the root logger
+    logger.propagate = False
+
+    return logger
+</code></pre>
+        <p>With this single line, your custom logger will handle the message and then stop, preventing the root logger from processing it again. This ensures that you get clean, non-duplicated log output in your console.</p>
+    </div>
+</body>
+</html>
